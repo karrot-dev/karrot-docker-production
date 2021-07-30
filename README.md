@@ -17,3 +17,4 @@ A setup for karrot using docker intended for production use to support easy self
 - [ ] app download URL?
 - [ ] redis storage volume?
 - [ ] worker healthcheck?
+- [ ] add stuff for co-op cloud setup...
