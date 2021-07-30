@@ -11,29 +11,29 @@ services:
       - "8080:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 1s
+      interval: 10s
       timeout: 3s
       retries: 30
     volumes:
-      - "uploads:/app/uploads"
+      - "app_data:/app/uploads"
 
   app:
     build: "app"
     restart: unless-stopped
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - "shiv:/root/.shiv"
-      - "geoip:/var/lib/GeoIP"
-      - "uploads:/app/uploads"
+      - "shiv_data:/root/.shiv"
+      - "geoip_data:/var/lib/GeoIP"
+      - "app_data:/app/uploads"
     environment:
       - "SITE_URL=http://localhost:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
-      interval: 1s
+      interval: 10s
       timeout: 3s
       retries: 90
     env_file:
@@ -54,10 +54,13 @@ services:
     build: "app"
     restart: unless-stopped
     depends_on:
-      # geoip data gets loaded on the first run of the app
+      # shiv + geoip data gets loaded on the first run of the app
       # so to ensure it's available in the worker too, we need to wait
       app:
         condition: service_healthy
+    volumes:
+      - "shiv_data:/root/.shiv"
+      - "geoip_data:/var/lib/GeoIP"
     env_file:
       - env
     command: "python karrot-backend.pyz worker"
@@ -72,26 +75,26 @@ services:
       timeout: 3s
       retries: 30
     volumes:
-      - "redis:/data"
+      - "redis_data:/data"
 
-  db:
+  postgres:
     image: "postgres:12-alpine"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U db"]
+      test: ["CMD-SHELL", "pg_isready -U karrot"]
       interval: 1s
       timeout: 3s
       retries: 30
     volumes:
-      - "database:/var/lib/postgresql/data"
+      - "postgres_data:/var/lib/postgresql/data"
     environment:
-      POSTGRES_PASSWORD: db
-      POSTGRES_USER: db
-      POSTGRES_DB: db
+      POSTGRES_PASSWORD: karrot
+      POSTGRES_USER: karrot
+      POSTGRES_DB: karrot
   
 volumes:
-  shiv:
-  geoip:
-  uploads:
-  database:
-  redis:
+  shiv_data:
+  geoip_data:
+  app_data:
+  postgres_data:
+  redis_data:
