@@ -1,0 +1,93 @@
+version: "3.8"
+services:
+
+  web:
+    build: "web"
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - "uploads:/app/uploads"
+
+  app:
+    build: "app"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - "shiv:/root/.shiv"
+      - "geoip:/var/lib/GeoIP"
+      - "uploads:/app/uploads"
+    environment:
+      - "SITE_URL=http://localhost:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
+      interval: 1s
+      timeout: 3s
+      retries: 90
+    env_file:
+      - env
+      - env.secrets
+    command: >
+      sh -c "
+      echo 'EditionIDs GeoLite2-City GeoLite2-Country' > /etc/GeoIP.conf &&
+      echo AccountID $${MAXMIND_ACCOUNT_ID} >> /etc/GeoIP.conf &&
+      echo LicenseKey $${MAXMIND_LICENSE_KEY} >> /etc/GeoIP.conf &&
+      echo 'Updating geoip data, first time could be slow...' &&
+      geoipupdate &&
+      python karrot-backend.pyz migrate &&
+      python karrot-backend.pyz server
+      "
+
+  worker:
+    build: "app"
+    restart: unless-stopped
+    depends_on:
+      # geoip data gets loaded on the first run of the app
+      # so to ensure it's available in the worker too, we need to wait
+      app:
+        condition: service_healthy
+    env_file:
+      - env
+    command: "python karrot-backend.pyz worker"
+  
+  redis:
+    image: redis:6-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  db:
+    image: "postgres:12-alpine"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: db
+      POSTGRES_USER: db
+      POSTGRES_DB: db
+  
+volumes:
+  shiv:
+  geoip:
+  uploads:
+  database:

@@ -1,0 +1,21 @@
+SECRET_KEY=foobar
+
+LISTEN_SERVER=uvicorn
+
+# if I set this it fails with:
+# TypeError: SelectorEventLoop required, instead got: <uvloop.Loop running=False closed=False debug=False>
+#LISTEN_CONCURRENCY=4
+
+LISTEN_HOST=0.0.0.0
+
+DATABASE_HOST=db
+DATABASE_PORT=5432
+DATABASE_NAME=db
+DATABASE_USER=db
+DATABASE_PASSWORD=db
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_DB=0
+
+#FRONTEND_DIR=/app/frontend
