@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 1s
       timeout: 3s
       retries: 30
@@ -63,7 +63,7 @@ services:
     command: "python karrot-backend.pyz worker"
   
   redis:
-    image: redis:6-alpine
+    image: "redis:6-alpine"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -80,7 +80,7 @@ services:
       timeout: 3s
       retries: 30
     volumes:
-      - database:/var/lib/postgresql/data
+      - "database:/var/lib/postgresql/data"
     environment:
       POSTGRES_PASSWORD: db
       POSTGRES_USER: db
