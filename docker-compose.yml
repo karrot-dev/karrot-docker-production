@@ -65,11 +65,14 @@ services:
   redis:
     image: "redis:6-alpine"
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
       timeout: 3s
       retries: 30
+    volumes:
+      - "redis:/data"
 
   db:
     image: "postgres:12-alpine"
@@ -91,3 +94,4 @@ volumes:
   geoip:
   uploads:
   database:
+  redis:

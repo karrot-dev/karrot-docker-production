@@ -16,3 +16,4 @@ A setup for karrot using docker intended for production use to support easy self
 - [ ] CSP headers
 - [ ] app download URL?
 - [ ] redis storage volume?
+- [ ] worker healthcheck?
